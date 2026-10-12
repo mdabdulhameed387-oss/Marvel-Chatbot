@@ -38,3 +38,7 @@ export interface MarvelChatReply {
   reply: string;
 }
 
+export interface SupabaseConnectionStatus {
+  connected: boolean;
+}
+

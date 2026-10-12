@@ -11,3 +11,4 @@ export * from './marvelChatInput';
 export * from './marvelChatMessage';
 export * from './marvelChatMessageRole';
 export * from './marvelChatReply';
+export * from './supabaseConnectionStatus';

@@ -22,7 +22,8 @@ import type {
 import type {
   HealthStatus,
   MarvelChatInput,
-  MarvelChatReply
+  MarvelChatReply,
+  SupabaseConnectionStatus
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -218,4 +219,82 @@ export const useSendMarvelMessage = <TError = ErrorType<void>,
       > => {
       return useMutation(getSendMarvelMessageMutationOptions(options));
     }
+
+export const getCheckSupabaseConnectionUrl = () => {
+
+
+
+
+  return `/api/supabase/health`
+}
+
+/**
+ * Checks Supabase connectivity without reading or changing app data.
+ * @summary Check the shared Supabase connection
+ */
+export const checkSupabaseConnection = async ( options?: Parameters<typeof customFetch>[1]): Promise<SupabaseConnectionStatus> => {
+
+  return customFetch<SupabaseConnectionStatus>(getCheckSupabaseConnectionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckSupabaseConnectionQueryKey = () => {
+    return [
+    `/api/supabase/health`
+    ] as const;
+    }
+
+
+export const getCheckSupabaseConnectionQueryOptions = <TData = Awaited<ReturnType<typeof checkSupabaseConnection>>, TError = ErrorType<SupabaseConnectionStatus>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckSupabaseConnectionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkSupabaseConnection>>> = ({ signal }) => checkSupabaseConnection({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckSupabaseConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof checkSupabaseConnection>>>
+export type CheckSupabaseConnectionQueryError = ErrorType<SupabaseConnectionStatus>
+
+
+/**
+ * @summary Check the shared Supabase connection
+ */
+
+export function useCheckSupabaseConnection<TData = Awaited<ReturnType<typeof checkSupabaseConnection>>, TError = ErrorType<SupabaseConnectionStatus>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckSupabaseConnectionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

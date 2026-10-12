@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: marvel
     description: Marvel-focused chat
+  - name: supabase
+    description: Shared Supabase connection status
 paths:
   /healthz:
     get:
@@ -49,6 +51,25 @@ paths:
           description: Invalid chat request
         "500":
           description: The assistant could not complete the request
+  /supabase/health:
+    get:
+      operationId: checkSupabaseConnection
+      tags: [supabase]
+      summary: Check the shared Supabase connection
+      description: Checks Supabase connectivity without reading or changing app data.
+      responses:
+        "200":
+          description: Supabase is reachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionStatus"
+        "503":
+          description: Supabase is not configured or cannot be reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionStatus"
 components:
   schemas:
     HealthStatus:
@@ -85,4 +106,10 @@ components:
         reply:
           type: string
       required: [reply]
+    SupabaseConnectionStatus:
+      type: object
+      properties:
+        connected:
+          type: boolean
+      required: [connected]
 

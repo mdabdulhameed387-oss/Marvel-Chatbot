@@ -39,3 +39,12 @@ export const SendMarvelMessageResponse = zod.object({
 })
 
 
+/**
+ * Checks Supabase connectivity without reading or changing app data.
+ * @summary Check the shared Supabase connection
+ */
+export const CheckSupabaseConnectionResponse = zod.object({
+  "connected": zod.boolean()
+})
+
+
