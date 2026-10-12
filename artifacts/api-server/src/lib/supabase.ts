@@ -3,6 +3,36 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 let anonClient: SupabaseClient | undefined;
 let serviceClient: SupabaseClient | undefined;
 
+function isNewSupabaseApiKey(key: string): boolean {
+  return key.startsWith("sb_publishable_") || key.startsWith("sb_secret_");
+}
+
+function createServerClient(url: string, key: string): SupabaseClient {
+  const newKey = isNewSupabaseApiKey(key);
+
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+    global: {
+      fetch: async (input, init) => {
+        if (!newKey) {
+          return fetch(input, init);
+        }
+
+        const headers = new Headers(init?.headers);
+        if (headers.get("Authorization") === `Bearer ${key}`) {
+          headers.delete("Authorization");
+        }
+
+        return fetch(input, { ...init, headers });
+      },
+    },
+  });
+}
+
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -17,16 +47,9 @@ function getRequiredEnv(name: string): string {
  */
 export function getSupabaseClient(): SupabaseClient {
   if (!anonClient) {
-    anonClient = createClient(
+    anonClient = createServerClient(
       getRequiredEnv("SUPABASE_URL"),
       getRequiredEnv("SUPABASE_ANON_KEY"),
-      {
-        auth: {
-          autoRefreshToken: false,
-          detectSessionInUrl: false,
-          persistSession: false,
-        },
-      },
     );
   }
 
@@ -39,16 +62,9 @@ export function getSupabaseClient(): SupabaseClient {
  */
 export function getSupabaseServiceClient(): SupabaseClient {
   if (!serviceClient) {
-    serviceClient = createClient(
+    serviceClient = createServerClient(
       getRequiredEnv("SUPABASE_URL"),
       getRequiredEnv("SUPABASE_SERVICEROLE_KEY"),
-      {
-        auth: {
-          autoRefreshToken: false,
-          detectSessionInUrl: false,
-          persistSession: false,
-        },
-      },
     );
   }
 
@@ -71,13 +87,20 @@ export async function checkSupabaseConnection(): Promise<{
   const endpoint = new URL("/rest/v1/", url);
 
   async function checkKey(key: string): Promise<Response> {
+    const headers: Record<string, string> = {
+      Accept: "application/openapi+json",
+      apikey: key,
+    };
+
+    // Legacy anon/service_role keys are JWTs. New publishable/secret keys are
+    // not JWTs and must not be sent as Authorization bearer tokens.
+    if (!isNewSupabaseApiKey(key)) {
+      headers.Authorization = `Bearer ${key}`;
+    }
+
     return fetch(endpoint, {
       method: "GET",
-      headers: {
-        Accept: "application/openapi+json",
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-      },
+      headers,
       signal: AbortSignal.timeout(5000),
     });
   }

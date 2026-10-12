@@ -45,6 +45,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Gotchas
 
 - Keep all Supabase credentials in the API server environment; do not place them in `VITE_` variables or frontend code.
+- Supabase `sb_publishable_` and `sb_secret_` keys are not JWTs: send them as `apikey`, not as bearer tokens. Keep `Authorization` for user JWTs.
 
 ## Pointers
 
