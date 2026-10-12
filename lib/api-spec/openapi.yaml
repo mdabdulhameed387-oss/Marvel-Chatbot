@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: marvel
+    description: Marvel-focused chat
 paths:
   /healthz:
     get:
@@ -24,6 +26,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /marvel/chat:
+    post:
+      operationId: sendMarvelMessage
+      tags: [marvel]
+      summary: Ask the Marvel assistant
+      description: Returns an answer to a Marvel-focused chat message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarvelChatInput"
+      responses:
+        "200":
+          description: Assistant reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarvelChatReply"
+        "400":
+          description: Invalid chat request
+        "500":
+          description: The assistant could not complete the request
 components:
   schemas:
     HealthStatus:
@@ -33,4 +58,31 @@ components:
           type: string
       required:
         - status
+    MarvelChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required: [role, content]
+    MarvelChatInput:
+      type: object
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          maxItems: 16
+          items:
+            $ref: "#/components/schemas/MarvelChatMessage"
+      required: [messages]
+    MarvelChatReply:
+      type: object
+      properties:
+        reply:
+          type: string
+      required: [reply]
 
