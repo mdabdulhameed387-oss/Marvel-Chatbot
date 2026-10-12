@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Marvel Chatbot"
+description = "A simple AI chat app for Marvel fans to ask questions about characters, comics, and movies, with suggested prompts and a focused Marvel-only assistant."
+version = "1.0.0"
+id = "artifacts/marvel-chatbot"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23029
+
+[services.development]
+run = "pnpm --filter @workspace/marvel-chatbot run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/marvel-chatbot", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/marvel-chatbot/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23029"
+BASE_PATH = "/"
